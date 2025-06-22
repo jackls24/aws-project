@@ -3,14 +3,45 @@ name: Deploy to Amazon ECS EC2
 on:
   push:
     branches:
-      - main  # cambia se usi un altro branch
+      - main
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    environment: aws
+    env:
+      USER_POOL_ID: ${{ vars.USER_POOL_ID }}
+      CLIENT_ID: ${{ vars.CLIENT_ID }}
+      AWS_REGION: ${{ vars.AWS_REGION }}   
+      IDENTITY_POOL_ID: ${{ vars.IDENTITY_POOL_ID }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      DEBUG: ${{ vars.DEBUG }}
+      S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+
+    steps:
+    - name: Debug Variables
+      run: |
+        echo "=== VARIABILI D'AMBIENTE ==="
+        echo "USER_POOL_ID: $USER_POOL_ID"
+        echo "CLIENT_ID: $CLIENT_ID"
+        echo "AWS_REGION: $AWS_REGION"
+        echo "IDENTITY_POOL_ID: $IDENTITY_POOL_ID"
+        echo "ENVIRONMENT: $ENVIRONMENT"
+        echo "DEBUG: $DEBUG"
+        echo "S3_BUCKET_NAME: $S3_BUCKET_NAME"
+        echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+        echo "ECS_CLUSTER: $ECS_CLUSTER"
+        echo "ECS_SERVICE: $ECS_SERVICE"
+        echo "ECS_TASK_DEFINITION: $ECS_TASK_DEFINITION"
+        echo "=========================="
   deploy:
-    #environment: aws
+    needs: debug
     runs-on: ubuntu-latest
     env:
-      # Variabili "non segrete" che usi nel workflow, definite come GitHub Variables o Environment variables
       USER_POOL_ID: ${{ vars.USER_POOL_ID }}
       CLIENT_ID: ${{ vars.CLIENT_ID }}
       AWS_REGION: ${{ vars.AWS_REGION }}   
@@ -30,8 +61,9 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+        # CORREZIONE: usa secrets per le credenziali
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
     - name: Login to Amazon ECR
@@ -40,6 +72,7 @@ jobs:
     - name: Build, tag, and push Docker image
       run: |
         IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+        echo "Building image with tag: $ECR_REPOSITORY:$IMAGE_TAG"
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./backend
         docker push $ECR_REPOSITORY:$IMAGE_TAG
         echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
