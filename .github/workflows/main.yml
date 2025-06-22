@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    environment: aws
+    #environment: aws
     runs-on: ubuntu-latest
     env:
       # Variabili "non segrete" che usi nel workflow, definite come GitHub Variables o Environment variables
