@@ -8,6 +8,19 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # Variabili "non segrete" che usi nel workflow, definite come GitHub Variables o Environment variables
+      USER_POOL_ID: ${{ vars.USER_POOL_ID }}
+      CLIENT_ID: ${{ vars.CLIENT_ID }}
+      AWS_REGION: ${{ vars.AWS_REGION }}   
+      IDENTITY_POOL_ID: ${{ vars.IDENTITY_POOL_ID }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      DEBUG: ${{ vars.DEBUG }}
+      S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
 
     steps:
     - name: Checkout code
@@ -24,8 +37,6 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Build, tag, and push Docker image
-      env:
-        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
       run: |
         IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./backend
@@ -34,8 +45,8 @@ jobs:
 
     - name: Register new ECS task definition revision
       run: |
-        TASK_DEF=$(aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION }})
-        NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | {family, containerDefinitions, executionRoleArn, taskRoleArn, networkMode, requiresCompatibilities, cpu, memory}')
+        TASK_DEF=$(aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION)
+        NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "$ECR_REPOSITORY:$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | {family, containerDefinitions, executionRoleArn, taskRoleArn, networkMode, requiresCompatibilities, cpu, memory}')
         echo "$NEW_TASK_DEF" > task-def.json
         REVISION=$(aws ecs register-task-definition --cli-input-json file://task-def.json | jq -r '.taskDefinition.revision')
         echo "REVISION=$REVISION" >> $GITHUB_ENV
@@ -43,6 +54,6 @@ jobs:
     - name: Update ECS service
       run: |
         aws ecs update-service \
-          --cluster ${{ secrets.ECS_CLUSTER }} \
-          --service ${{ secrets.ECS_SERVICE }} \
-          --task-definition ${{ secrets.ECS_TASK_DEFINITION }}:$REVISION
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --task-definition $ECS_TASK_DEFINITION:$REVISION
