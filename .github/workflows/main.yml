@@ -40,6 +40,7 @@ jobs:
         echo "=========================="
   deploy:
     needs: debug
+    environment: aws
     runs-on: ubuntu-latest
     env:
       USER_POOL_ID: ${{ vars.USER_POOL_ID }}
