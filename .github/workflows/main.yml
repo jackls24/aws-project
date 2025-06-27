@@ -1,0 +1,94 @@
+name: Deploy to Amazon ECS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    environment: aws
+    env:
+      USER_POOL_ID: ${{ vars.USER_POOL_ID }}
+      CLIENT_ID: ${{ vars.CLIENT_ID }}
+      AWS_REGION: ${{ vars.AWS_REGION }}   
+      IDENTITY_POOL_ID: ${{ vars.IDENTITY_POOL_ID }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      DEBUG: ${{ vars.DEBUG }}
+      S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+
+    steps:
+    - name: Debug Variables
+      run: |
+        echo "=== VARIABILI D'AMBIENTE ==="
+        echo "USER_POOL_ID: $USER_POOL_ID"
+        echo "CLIENT_ID: $CLIENT_ID"
+        echo "AWS_REGION: $AWS_REGION"
+        echo "IDENTITY_POOL_ID: $IDENTITY_POOL_ID"
+        echo "ENVIRONMENT: $ENVIRONMENT"
+        echo "DEBUG: $DEBUG"
+        echo "S3_BUCKET_NAME: $S3_BUCKET_NAME"
+        echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+        echo "ECS_CLUSTER: $ECS_CLUSTER"
+        echo "ECS_SERVICE: $ECS_SERVICE"
+        echo "ECS_TASK_DEFINITION: $ECS_TASK_DEFINITION"
+        echo "=========================="
+  deploy:
+    needs: debug
+    environment: aws
+    runs-on: ubuntu-latest
+    env:
+      USER_POOL_ID: ${{ vars.USER_POOL_ID }}
+      CLIENT_ID: ${{ vars.CLIENT_ID }}
+      AWS_REGION: ${{ vars.AWS_REGION }}   
+      IDENTITY_POOL_ID: ${{ vars.IDENTITY_POOL_ID }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      DEBUG: ${{ vars.DEBUG }}
+      S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        # CORREZIONE: usa secrets per le credenziali
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push Docker image
+      run: |
+        IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+        echo "Building image with tag: $ECR_REPOSITORY:$IMAGE_TAG"
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./backend
+        docker push $ECR_REPOSITORY:$IMAGE_TAG
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+    - name: Register new ECS task definition revision
+      run: |
+        TASK_DEF=$(aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION)
+        NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "$ECR_REPOSITORY:$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | {family, containerDefinitions, executionRoleArn, taskRoleArn, networkMode, requiresCompatibilities, cpu, memory}')
+        echo "$NEW_TASK_DEF" > task-def.json
+        REVISION=$(aws ecs register-task-definition --cli-input-json file://task-def.json | jq -r '.taskDefinition.revision')
+        echo "REVISION=$REVISION" >> $GITHUB_ENV
+
+    - name: Update ECS service
+      run: |
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --task-definition $ECS_TASK_DEFINITION:$REVISION
