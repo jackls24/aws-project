@@ -22,7 +22,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"message": "AWS Backend API is running with FastAPI changed BY ACTION By Action NEWWW   NEW 3"}
+    return {"message": "AWS Backend API is running with FastAPI changed BY ACTION By Action NEWWW   NEW 4"}
 
 @app.get("/health")
 async def health_check():
