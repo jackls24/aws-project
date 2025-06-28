@@ -62,7 +62,6 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        # CORREZIONE: usa secrets per le credenziali
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
@@ -92,3 +91,4 @@ jobs:
           --cluster $ECS_CLUSTER \
           --service $ECS_SERVICE \
           --task-definition $ECS_TASK_DEFINITION:$REVISION
+          --network-configuration "awsvpcConfiguration={subnets=[subnet-01bacb758b2f093ef,subnet-008a9df009d44806d],securityGroups=[sg-09d45e348affe7f33],assignPublicIp=ENABLED}"
