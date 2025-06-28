@@ -79,7 +79,7 @@ function App() {
       const response = await axios.get(`${API_BASE_URL}/health`);
       setMessage(`API Status. : ${response.data.status}`);
     } catch (error) {
-      setMessage("API non raggiungibile ");
+      setMessage("API non raggiungibile");
     }
   };
 
