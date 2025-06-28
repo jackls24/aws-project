@@ -55,7 +55,7 @@ function App() {
       document.getElementById("fileInput").value = "";
     } catch (error) {
       console.error("Errore upload:", error);
-      setMessage("Errore durante il caricamento ");
+      setMessage("Errore durante il caricamento  ");
     } finally {
       setLoading(false);
     }
