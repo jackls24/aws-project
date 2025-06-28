@@ -19,9 +19,6 @@ jobs:
         working-directory: frontend
 
     steps:
-      - name: Check frontend/build contents
-        run: ls -la ./build
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -32,6 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: List frontend folder (debug)
+        run: ls -la frontend
 
       - name: Build frontend
         run: |
