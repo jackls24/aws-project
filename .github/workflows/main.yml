@@ -90,4 +90,6 @@ jobs:
        aws ecs update-service \
         --cluster $ECS_CLUSTER \
         --service $ECS_SERVICE \
-        --task-definition $ECS_TASK_DEFINITION:$REVISION
+        --task-definition $ECS_TASK_DEFINITION:$REVISION \
+        --desired-count 2
+
