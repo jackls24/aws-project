@@ -70,7 +70,7 @@ function App() {
       setMessage("Immagine eliminata con successo");
     } catch (error) {
       console.error("Errore eliminazione:", error);
-      setMessage("Erroree durante l'eliminazione");
+      setMessage("Erroree durante l'eliminazione ");
     }
   };
 
