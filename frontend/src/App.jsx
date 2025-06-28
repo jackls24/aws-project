@@ -14,7 +14,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "ecs-alb-backend-797512759.us-east-1.elb.amazonaws.com";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
