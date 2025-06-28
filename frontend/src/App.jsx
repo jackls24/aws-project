@@ -11,10 +11,10 @@ import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import ConfirmAccount from "./components/Auth/ConfirmAccount";
 import ProtectedRoute from "./components/ProtectedRoute";
-
 import "./App.css";
 
-const API_BASE_URL = "ecs-alb-backend-797512759.us-east-1.elb.amazonaws.com";
+const API_BASE_URL =
+  "http://ecs-alb-backend-797512759.us-east-1.elb.amazonaws.com";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
