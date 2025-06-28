@@ -18,7 +18,6 @@ jobs:
       IDENTITY_POOL_ID: ${{ vars.IDENTITY_POOL_ID }}
       ENVIRONMENT: ${{ vars.ENVIRONMENT }}
       DEBUG: ${{ vars.DEBUG }}
-      S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
       ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
       ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
       ECS_SERVICE: ${{ vars.ECS_SERVICE }}
@@ -34,7 +33,6 @@ jobs:
         echo "IDENTITY_POOL_ID: $IDENTITY_POOL_ID"
         echo "ENVIRONMENT: $ENVIRONMENT"
         echo "DEBUG: $DEBUG"
-        echo "S3_BUCKET_NAME: $S3_BUCKET_NAME"
         echo "ECR_REPOSITORY: $ECR_REPOSITORY"
         echo "ECS_CLUSTER: $ECS_CLUSTER"
         echo "ECS_SERVICE: $ECS_SERVICE"
@@ -51,7 +49,6 @@ jobs:
       IDENTITY_POOL_ID: ${{ vars.IDENTITY_POOL_ID }}
       ENVIRONMENT: ${{ vars.ENVIRONMENT }}
       DEBUG: ${{ vars.DEBUG }}
-      S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
       ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
       ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
       ECS_SERVICE: ${{ vars.ECS_SERVICE }}

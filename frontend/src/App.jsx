@@ -77,7 +77,7 @@ function App() {
   const checkApiHealth = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/health`);
-      setMessage(`API Status: ${response.data.status}`);
+      setMessage(`API Status. : ${response.data.status}`);
     } catch (error) {
       setMessage("API non raggiungibile");
     }

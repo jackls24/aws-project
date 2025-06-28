@@ -9,8 +9,11 @@ on:
 
 jobs:
   build-and-deploy:
-    environment: aws
+  environment:
+    name: aws
     runs-on: ubuntu-latest
+    env:
+      AWS_S3_BUCKET: ${{ vars.S3_FRONTEND_BUCKET }}
     defaults:
       run:
         working-directory: frontend
@@ -37,8 +40,7 @@ jobs:
         with:
           args: --delete
         env:
-          AWS_S3_BUCKET: ${{ vars.S3_FRONTEND_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
-          SOURCE_DIR: ./dist 
+          SOURCE_DIR: ./build
