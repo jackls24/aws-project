@@ -91,4 +91,4 @@ jobs:
         --cluster $ECS_CLUSTER \
         --service $ECS_SERVICE \
         --task-definition $ECS_TASK_DEFINITION:$REVISION \
-        --network-configuration "awsvpcConfiguration={subnets=[subnet-01bacb758b2f093ef,subnet-008a9df009d44806d],securityGroups=[sg-09d45e348affe7f33],assignPublicIp=ENABLED}"
+        --network-configuration "awsvpcConfiguration={subnets=[subnet-01bacb758b2f093ef,subnet-008a9df009d44806d],securityGroups=[sg-09d45e348affe7f33]}"
