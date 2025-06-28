@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Check frontend/build contents
-        run: ls -la ./frontend/build
+        run: ls -la ./build
 
       - name: Checkout code
         uses: actions/checkout@v4
