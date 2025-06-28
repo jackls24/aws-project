@@ -9,15 +9,14 @@ on:
 
 jobs:
   build-and-deploy:
-  environment:
-    name: aws
+    environment:
+      name: aws
     runs-on: ubuntu-latest
     env:
       AWS_S3_BUCKET: ${{ vars.S3_FRONTEND_BUCKET }}
     defaults:
       run:
         working-directory: frontend
-        
 
     steps:
       - name: Checkout code
@@ -40,6 +39,7 @@ jobs:
         with:
           args: --delete
         env:
+          AWS_S3_BUCKET: ${{ env.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
