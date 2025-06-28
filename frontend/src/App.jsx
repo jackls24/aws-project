@@ -67,7 +67,7 @@ function App() {
       setUploadedImages((prev) =>
         prev.filter((img) => img.filename !== filename)
       );
-      setMessage("Immagine eliminata con successo");
+      setMessage("Immagine eliminata  con successo");
     } catch (error) {
       console.error("Errore eliminazione:", error);
       setMessage("Erroree durante l'eliminazione       ");
