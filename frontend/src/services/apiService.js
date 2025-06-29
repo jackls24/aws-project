@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = "http://ecs-alb-backend-797512759.us-east-1.elb.amazonaws.com";
 
 class ApiService {
     constructor() {
@@ -68,7 +68,7 @@ class ApiService {
     async getUserImages(userId) {
         try {
             // Temporaneo: ottieni tutte le immagini dal backend
-            const response = await this.client.get('/api/upload');
+            const response = await this.client.get(`/api/images/${userId}`);
             return { images: response.data || [] };
         } catch (error) {
             console.error('Errore nel recupero immagini', error);

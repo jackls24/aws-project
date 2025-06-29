@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = "http://localhost:8000";
+const COGNITO_DOMAIN = process.env.REACT_APP_USER_POOL_DOMAIN;
+const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
+const REDIRECT_URI = 'http://localhost:3000/callback';
 
 class AuthService {
     constructor() {
@@ -10,98 +13,107 @@ class AuthService {
         });
     }
 
-    async login(username, password) {
-        try {
-            const response = await this.client.post('/auth/login', {
-                username,
-                password
-            });
+    redirectToLogin() {
+        const params = new URLSearchParams({
+            response_type: 'code',
+            client_id: CLIENT_ID,
+            redirect_uri: REDIRECT_URI,
+            scope: 'openid'
+        });
 
-            // Verifica se la risposta contiene un errore
-            if (response.data.error) {
-                throw new Error(response.data.error);
+        window.location.href = `${COGNITO_DOMAIN}/oauth2/authorize?${params.toString()}`;
+    }
+
+    async exchangeCodeForTokens(code) {
+        try {
+            const response = await this.client.post('/auth/exchange-code', {
+                code,
+                redirect_uri: REDIRECT_URI
+            });
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 400) {
+                const errorData = error.response.data;
+                if (errorData.detail && errorData.detail.includes('invalid_grant')) {
+                    throw new Error('Codice di autorizzazione non valido o già utilizzato. Riprova il login.');
+                }
+                throw new Error(errorData.detail || 'Errore di autenticazione');
             }
-
-            return response.data;
-        } catch (error) {
-            console.error('Errore durante il login:', error);
-            if (error.response?.data?.error) {
-                throw new Error(error.response.data.error);
-            }
-            throw error;
+            throw new Error(error.response?.data?.detail || 'Errore di connessione al server');
         }
     }
 
-    async register(username, password, email) {
+    parseIdToken(idToken) {
         try {
-            const response = await this.client.post('/auth/signup', {
-                username,
-                password,
-                email
+            const payload = JSON.parse(atob(idToken.split('.')[1]));
+            return {
+                username: payload['cognito:username'],
+                email: payload.email,
+                sub: payload.sub
+            };
+        } catch (error) {
+            console.error('Errore nel parsing del token:', error);
+            return {};
+        }
+    }
+
+    logoutLocal() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('idToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('username');
+
+        sessionStorage.clear();
+
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    caches.delete(name);
+                });
             });
-
-            // Salviamo l'username in sessionStorage per riutilizzarlo nella pagina di conferma
-            sessionStorage.setItem('pendingConfirmation', username);
-
-            return response.data;
-        } catch (error) {
-            console.error('Errore durante la registrazione:', error);
-            throw error.response?.data || { detail: 'Errore di connessione al server' };
-        }
-    }
-
-    async confirmAccount(username, confirmationCode) {
-        try {
-            const response = await this.client.post('/auth/confirm', {
-                username,
-                confirmation_code: confirmationCode
-            });
-
-            // Rimuoviamo l'username dalla sessione dopo la conferma
-            sessionStorage.removeItem('pendingConfirmation');
-
-            return response.data;
-        } catch (error) {
-            console.error('Errore durante la conferma:', error);
-            throw error.response?.data || { detail: 'Errore di connessione al server' };
-        }
-    }
-
-    async resendConfirmationCode(username) {
-        try {
-            const response = await this.client.post('/auth/resend-code', {
-                username
-            });
-
-            return response.data;
-        } catch (error) {
-            console.error('Errore durante l\'invio del codice:', error);
-            throw error.response?.data || { detail: 'Errore di connessione al server' };
-        }
-    }
-
-    async getUserInfo() {
-        try {
-            const response = await this.client.get('/auth/me');
-            return response.data;
-        } catch (error) {
-            console.error('Errore durante il recupero delle informazioni utente:', error);
-            throw error.response?.data || { detail: 'Errore di connessione al server' };
         }
     }
 
     logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('username');
+        this.logoutLocal();
+
+        if (!COGNITO_DOMAIN || !CLIENT_ID) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const logoutUri = 'http://localhost:3000/login';
+
+        const params = new URLSearchParams({
+            client_id: CLIENT_ID,
+            logout_uri: logoutUri
+        });
+
+        const domain = COGNITO_DOMAIN.endsWith('/') ? COGNITO_DOMAIN.slice(0, -1) : COGNITO_DOMAIN;
+        const logoutUrl = `${domain}/logout?${params.toString()}`;
+
+        window.location.replace(logoutUrl);
+    }
+
+    async login(username, password) {
+        this.redirectToLogin();
     }
 
     isLoggedIn() {
-        return !!localStorage.getItem('token');
-    }
-
-    getPendingConfirmation() {
-        return sessionStorage.getItem('pendingConfirmation');
+        const idToken = localStorage.getItem('idToken');
+        if (!idToken) return false;
+        try {
+            const payload = JSON.parse(atob(idToken.split('.')[1]));
+            const exp = payload.exp * 1000;
+            if (Date.now() >= exp) {
+                this.logoutLocal();
+                return false;
+            }
+            return true;
+        } catch (error) {
+            this.logoutLocal();
+            return false;
+        }
     }
 }
 

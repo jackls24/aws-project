@@ -6,20 +6,7 @@ import { UploadButton } from "../UI/upload-button";
 import { ImageSkeleton } from "../UI/image-skeleton";
 import { TagCloud } from "../UI/tag-cloud";
 import apiService from "../../services/apiService";
-
-// Rimosso l'interfaccia Image e sostituita con un commento
-/* 
-  Struttura oggetto immagine:
-  {
-    id: string;
-    url: string;
-    name: string;
-    tags: string[];
-    key?: string;
-    lastModified?: Date;
-    size?: number;
-  }
-*/
+import authService from "../../services/authService";
 
 const Dashboard = () => {
   const [images, setImages] = useState([]);
@@ -31,7 +18,6 @@ const Dashboard = () => {
 
   const username = localStorage.getItem("username") || "anonymous";
 
-  // Carica le immagini al mount del componente
   useEffect(() => {
     loadUserImages();
   }, []);
@@ -44,8 +30,6 @@ const Dashboard = () => {
       console.log("Caricamento immagini per utente:", username);
 
       const response = await apiService.getUserImages(username);
-
-      // Converti la risposta nel formato richiesto dalla galleria
       const galleryImages = response.images || [];
 
       setImages(galleryImages);
@@ -64,11 +48,21 @@ const Dashboard = () => {
 
   const handleSignOut = async () => {
     try {
-      localStorage.removeItem("username");
-      localStorage.removeItem("token");
-      navigate("/login");
+      console.log("Iniziando processo di logout...");
+
+      const confirmLogout = window.confirm(
+        "Sei sicuro di voler effettuare il logout?"
+      );
+      if (!confirmLogout) {
+        return;
+      }
+
+      authService.logout();
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Errore durante il logout:", error);
+
+      authService.logoutLocal();
+      navigate("/login");
     }
   };
 
@@ -93,7 +87,6 @@ const Dashboard = () => {
     setSearchQuery(tag);
 
     try {
-      // Cerca immagini per tag tramite API
       const response = await apiService.searchImagesByTag(username, tag);
       const filteredByTag = response.images || [];
 
@@ -103,18 +96,13 @@ const Dashboard = () => {
       );
     } catch (error) {
       console.error("Errore durante la ricerca per tag:", error);
-      // Fallback alla ricerca locale
       handleSearch(tag);
     }
   };
 
   const handleUploadComplete = (uploadedFiles) => {
     console.log("File caricati:", uploadedFiles);
-
-    // Ricarica le immagini dal backend per avere i dati aggiornati
     loadUserImages();
-
-    // Mostra messaggio di successo
     alert(`${uploadedFiles.length} immagine/i caricate con successo!`);
   };
 
@@ -131,7 +119,6 @@ const Dashboard = () => {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
-      {/* Header della pagina */}
       <div
         style={{
           backgroundColor: "white",
@@ -143,33 +130,23 @@ const Dashboard = () => {
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "0 20px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            flexWrap: "wrap",
+            padding: "0 20px",
           }}
         >
           <div>
-            <h1 style={{ margin: "0 0 10px 0", fontSize: "2rem" }}>
-              La tua Galleria
-            </h1>
-            <p style={{ margin: 0, color: "#6c757d" }}>
-              Benvenuto, {username}!
+            <h1 style={{ margin: 0, color: "#333" }}>Galleria Immagini</h1>
+            <p style={{ margin: "5px 0 0 0", color: "#666" }}>
+              Benvenuto, {username}
             </p>
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <SearchBar onSearch={handleSearch} className="search-bar" />
+
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <UploadButton onUploadComplete={handleUploadComplete} />
             <button
-              onClick={() => loadUserImages()}
+              onClick={loadUserImages}
               style={{
                 padding: "8px 16px",
                 backgroundColor: "#28a745",
@@ -215,7 +192,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Contenuto principale */}
       <div
         style={{
           maxWidth: "1200px",
@@ -223,7 +199,6 @@ const Dashboard = () => {
           padding: "20px",
         }}
       >
-        {/* Errori */}
         {error && (
           <div
             style={{
@@ -239,7 +214,10 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Tag Cloud */}
+        <div style={{ marginBottom: "20px" }}>
+          <SearchBar onSearch={handleSearch} searchQuery={searchQuery} />
+        </div>
+
         <div style={{ marginBottom: "20px" }}>
           <TagCloud
             userId={username}
@@ -248,36 +226,28 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Galleria Immagini */}
         <section style={{ marginBottom: "40px" }}>
           {isLoading ? (
             <ImageSkeleton />
-          ) : filteredImages.length > 0 ? (
-            <ImageGallery images={filteredImages} />
           ) : (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "60px 20px",
-                backgroundColor: "white",
-                borderRadius: "8px",
-              }}
-            >
-              <p style={{ color: "#6c757d", fontSize: "18px" }}>
-                {searchQuery
-                  ? `Nessuna immagine trovata per "${searchQuery}"`
-                  : images.length === 0
-                  ? "Nessuna immagine caricata. Carica la tua prima immagine!"
-                  : "Nessun risultato trovato"}
-              </p>
-              {images.length === 0 && (
-                <div style={{ marginTop: "20px" }}>
-                  <UploadButton onUploadComplete={handleUploadComplete} />
-                </div>
-              )}
-            </div>
+            <ImageGallery images={filteredImages} />
           )}
         </section>
+
+        <div
+          style={{
+            textAlign: "center",
+            color: "#666",
+            fontSize: "14px",
+          }}
+        >
+          {searchQuery && (
+            <p>
+              Mostrando {filteredImages.length} immagini per "{searchQuery}"
+            </p>
+          )}
+          <p>Totale immagini: {images.length}</p>
+        </div>
       </div>
     </div>
   );
