@@ -2,7 +2,7 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
-import jwt
+from jose import jwt 
 
 # Carica variabili da .env
 load_dotenv()
@@ -103,9 +103,22 @@ def validate_token(access_token):
 
 def get_temporary_credentials(id_token):
     try:
-        decoded = jwt.decode(id_token, options={"verify_signature": False})
-        if decoded.get("aud") != CLIENT_ID:
-            return {"error": "Token 'aud' non corrisponde al CLIENT_ID"}
+        if not id_token:
+            return {"error": "ID token mancante"}
+
+        decoded = jwt.decode(
+            id_token,
+            key="",
+            options={
+                "verify_signature": False,
+                "verify_aud": False,
+                "verify_at_hash": False
+            }
+        )
+        aud = decoded.get("aud")
+        token_use = decoded.get("token_use")
+        if aud != CLIENT_ID or token_use != "id":
+            return {"error": "Token non valido per le credenziali temporanee"}
 
         provider = f"cognito-idp.{AWS_REGION}.amazonaws.com/{USER_POOL_ID}"
 
@@ -121,15 +134,15 @@ def get_temporary_credentials(id_token):
 
         return {
             "IdentityId": identity["IdentityId"],
-            "Credentials": {
-                "AccessKeyId": creds["Credentials"]["AccessKeyId"],
-                "SecretKey": creds["Credentials"]["SecretKey"],
-                "SessionToken": creds["Credentials"]["SessionToken"],
-                "Expiration": creds["Credentials"]["Expiration"].isoformat()
-            }
+            "AccessKeyId": creds["Credentials"]["AccessKeyId"],
+            "SecretKey": creds["Credentials"]["SecretKey"],
+            "SessionToken": creds["Credentials"]["SessionToken"],
+            "Expiration": creds["Credentials"]["Expiration"].isoformat()
         }
 
     except ClientError as e:
+        print(f"ClientError in get_temporary_credentials: {e.response['Error']['Message']}")
         return {"error": e.response['Error']['Message']}
     except Exception as e:
+        print(f"Exception in get_temporary_credentials: {str(e)}")
         return {"error": str(e)}
