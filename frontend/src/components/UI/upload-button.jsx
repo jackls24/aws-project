@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import apiService from "../../services/apiService";
 
-export function UploadButton({ onUploadComplete, initialFile, onClose }) {
+function UploadButton({ onUploadComplete, initialFile, onClose }) {
   const [isOpen, setIsOpen] = useState(initialFile ? true : false);
   const [isUploading, setIsUploading] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
@@ -433,4 +433,6 @@ export function UploadButton({ onUploadComplete, initialFile, onClose }) {
     </>
   );
 }
+
+export default UploadButton;
 
