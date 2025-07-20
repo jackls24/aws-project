@@ -28,9 +28,13 @@ async def health_check():
 
 
 
+
+from routes.album import router as album_router
+
+app.include_router(auth_router, prefix="/auth", tags=["authentication"])
 app.include_router(upload_router, prefix="/api", tags=["upload"])
 app.include_router(images_router, prefix="/api", tags=["images"])
-app.include_router(auth_router, prefix="/auth", tags=["authentication"])
+app.include_router(album_router, prefix="/api", tags=["albums"])
 
 
 

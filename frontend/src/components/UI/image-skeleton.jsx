@@ -1,63 +1,48 @@
 import React from "react";
+import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 
-export function ImageSkeleton({ count = 6 }) {
+const ImageSkeleton = ({ count = 8 }) => {
   return (
-    <>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "24px",
-        }}
-      >
-        {Array.from({ length: count }).map((_, index) => (
-          <div
-            key={index}
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              overflow: "hidden",
-              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                aspectRatio: "16/9",
-                backgroundColor: "#f3f4f6",
-                animation: "pulse 2s infinite",
-              }}
-            />
-            <div style={{ padding: "16px" }}>
-              <div
-                style={{
-                  height: "20px",
-                  backgroundColor: "#f3f4f6",
-                  marginBottom: "8px",
-                  borderRadius: "4px",
-                  animation: "pulse 2s infinite",
-                }}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {Array.from({ length: count }).map((_, index) => (
+        <Card key={index} className="overflow-hidden bg-white/70 backdrop-blur-sm border-slate-200">
+          <CardContent className="p-0">
+            {/* Skeleton per l'immagine */}
+            <Skeleton className="w-full h-48" />
+            
+            <div className="p-4">
+              {/* Skeleton per il titolo */}
+              <Skeleton 
+                className="h-5 mb-2" 
+                style={{ width: `${Math.random() * 40 + 60}%` }} 
               />
-              <div
-                style={{
-                  height: "16px",
-                  width: "60%",
-                  backgroundColor: "#f3f4f6",
-                  borderRadius: "4px",
-                  animation: "pulse 2s infinite",
-                }}
-              />
+              
+              {/* Skeleton per le informazioni autore/data */}
+              <div className="flex items-center justify-between mb-3">
+                <Skeleton 
+                  className="h-4" 
+                  style={{ width: `${Math.random() * 30 + 40}%` }} 
+                />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              
+              {/* Skeleton per i tag */}
+              <div className="flex flex-wrap gap-1">
+                {Array.from({ length: Math.floor(Math.random() * 3) + 1 }).map((_, tagIndex) => (
+                  <Skeleton
+                    key={tagIndex}
+                    className="h-6 rounded-full"
+                    style={{ width: `${Math.random() * 30 + 40}px` }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
-    </>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
-}
+};
+
+export default ImageSkeleton;

@@ -1,3 +1,4 @@
+from fastapi import APIRouter, HTTPException, Header
 import os
 import boto3
 from botocore.exceptions import ClientError
@@ -99,6 +100,31 @@ def validate_token(access_token):
         return cognito_idp.get_user(AccessToken=access_token)
     except ClientError as e:
         return {"error": e.response['Error']['Message']}
+
+def get_cognito_credentials(id_token: str):
+    try:
+        cognito_identity = boto3.client('cognito-identity', region_name=AWS_REGION)
+        
+        response = cognito_identity.get_id(
+            IdentityPoolId=IDENTITY_POOL_ID,
+            Logins={
+                f'cognito-idp.{AWS_REGION}.amazonaws.com/{USER_POOL_ID}': id_token
+            }
+        )
+        
+        identity_id = response['IdentityId']
+        
+        credentials_response = cognito_identity.get_credentials_for_identity(
+            IdentityId=identity_id,
+            Logins={
+                f'cognito-idp.{AWS_REGION}.amazonaws.com/{USER_POOL_ID}': id_token
+            }
+        )
+        
+        return credentials_response['Credentials']
+        
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Errore nell'ottenere credenziali: {str(e)}")
 
 
 def get_temporary_credentials(id_token):

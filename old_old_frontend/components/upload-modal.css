@@ -1,0 +1,151 @@
+.upload-modal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalSlideIn 0.4s ease;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.file-upload-section {
+  padding: 2rem;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.file-input-container {
+  position: relative;
+}
+
+.file-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-label {
+  display: block;
+  border: 3px dashed #ccc;
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-label:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
+}
+
+.upload-icon {
+  font-size: 3rem;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 10px;
+  animation: fadeIn 0.3s ease;
+}
+
+.form-fields {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.field-group input {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.field-group input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.field-hint {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.form-actions {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e1e5e9;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  background: #f8f9fa;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+@media (max-width: 768px) {
+  .upload-modal {
+    margin: 1rem;
+    max-height: 95vh;
+  }
+
+  .file-upload-section,
+  .form-fields {
+    padding: 1.5rem;
+  }
+
+  .form-actions {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+  }
+
+  .upload-placeholder {
+    gap: 0.5rem;
+  }
+
+  .upload-icon {
+    font-size: 2rem;
+  }
+}

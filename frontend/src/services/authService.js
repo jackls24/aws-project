@@ -91,8 +91,8 @@ class AuthService {
 
         const domain = COGNITO_DOMAIN.endsWith('/') ? COGNITO_DOMAIN.slice(0, -1) : COGNITO_DOMAIN;
         const logoutUrl = `${domain}/logout?${params.toString()}`;
-
-        window.location.replace(logoutUrl);
+        console.log('Redirecting to logout URL:', logoutUrl);
+        //window.location.replace(logoutUrl);
     }
 
     async login(username, password) {

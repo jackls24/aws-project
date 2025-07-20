@@ -3,11 +3,11 @@
 import React, { useState, useRef } from "react";
 import apiService from "../../services/apiService";
 
-export function UploadButton({ onUploadComplete }) {
-  const [isOpen, setIsOpen] = useState(false);
+export function UploadButton({ onUploadComplete, initialFile, onClose }) {
+  const [isOpen, setIsOpen] = useState(initialFile ? true : false);
   const [isUploading, setIsUploading] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(initialFile || null);
   const [preview, setPreview] = useState(null);
   const [imageName, setImageName] = useState("");
   const [tagInput, setTagInput] = useState("");
@@ -15,6 +15,21 @@ export function UploadButton({ onUploadComplete }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef(null);
+
+  // Carica anteprima se arriva un file iniziale
+  React.useEffect(() => {
+    if (initialFile) {
+      setIsImageLoading(true);
+      setSelectedFile(initialFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+        setIsImageLoading(false);
+        setImageName(initialFile.name.split(".")[0]);
+      };
+      reader.readAsDataURL(initialFile);
+    }
+  }, [initialFile]);
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
@@ -86,6 +101,9 @@ export function UploadButton({ onUploadComplete }) {
       const userId = localStorage.getItem("username") || "anonymous";
       formData.append("userId", userId);
 
+      // Ottieni l'ID token Cognito dal localStorage/sessionStorage
+      const idToken = localStorage.getItem("idToken"); // Assicurati che sia l'ID token Cognito
+
       // Simula progress per UX
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
@@ -98,8 +116,9 @@ export function UploadButton({ onUploadComplete }) {
       }, 300);
 
       // Upload del file tramite API backend
-      console.log("Inizio upload del file...");
-      const result = await apiService.uploadImage(formData);
+      console.log("Inizio upload del file, idToken:", idToken);
+      const result = await apiService.uploadImage(formData, idToken);
+
       clearInterval(progressInterval);
 
       if (result && result.url) {
@@ -164,35 +183,42 @@ export function UploadButton({ onUploadComplete }) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        style={{
-          padding: "8px 16px",
-          backgroundColor: "#10b981",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-          fontWeight: "500",
-        }}
+        className="flex items-center gap-2 px-4 py-2 border border-white rounded-full text-emerald-700 font-semibold hover:bg-emerald-50 transition shadow"
+        type="button"
+        title="Carica"
       >
-        📤 Carica Immagine
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="inline-block"
+        >
+          <circle
+            cx="10"
+            cy="10"
+            r="9"
+            stroke="#059669"
+            strokeWidth="2"
+            fill="white"
+          />
+          <path
+            d="M10 6v8M6 10h8"
+            stroke="#059669"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span>Carica</span>
       </button>
+
+
 
       {isOpen && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 50,
-            padding: "20px",
-          }}
+          className="fixed inset-0 bg-black/50 z-50 min-h-screen flex items-center justify-center p-4"
+          style={{ minHeight: "100vh" }}
           onClick={() => {
             if (!isUploading) {
               setIsOpen(false);
@@ -201,136 +227,45 @@ export function UploadButton({ onUploadComplete }) {
           }}
         >
           <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              maxWidth: "500px",
-              width: "100%",
-              maxHeight: "90vh",
-              overflow: "auto",
-              padding: "24px",
-            }}
+            className="bg-white rounded-xl max-w-md w-full p-6 shadow-lg relative animate-fade-in flex flex-col overflow-y-auto"
+            style={{ maxHeight: "90vh" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ marginBottom: "16px" }}>
-              <h3
-                style={{
-                  margin: "0 0 8px 0",
-                  fontSize: "18px",
-                  fontWeight: "600",
-                }}
-              >
-                Carica una nuova immagine
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  color: "#6b7280",
-                  fontSize: "14px",
-                }}
-              >
-                Seleziona un'immagine dal tuo dispositivo
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold mb-2">
+              Carica una nuova immagine
+            </h3>
+            <p className="text-slate-500 text-sm mb-4">
+              Seleziona un'immagine dal tuo dispositivo
+            </p>
 
             {/* Mostra errori */}
             {uploadError && (
-              <div
-                style={{
-                  backgroundColor: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  color: "#991b1b",
-                  padding: "12px",
-                  borderRadius: "6px",
-                  marginBottom: "16px",
-                  fontSize: "14px",
-                  whiteSpace: "pre-line",
-                  maxHeight: "150px",
-                  overflow: "auto",
-                }}
-              >
-                <strong>Errore:</strong>
-                <br />
-                {uploadError}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-4 text-sm">
+                <strong>Errore:</strong> {uploadError}
               </div>
             )}
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "16px",
-                }}
-              >
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col items-center gap-4">
                 {isImageLoading ? (
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: "400px",
-                      height: "200px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: "#f3f4f6",
-                      borderRadius: "8px",
-                      border: "1px solid #e5e7eb",
-                    }}
-                  >
-                    <div style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          border: "3px solid #e5e7eb",
-                          borderTop: "3px solid #3b82f6",
-                          borderRadius: "50%",
-                          animation: "spin 1s linear infinite",
-                          margin: "0 auto 8px",
-                        }}
-                      />
-                      <p>Caricamento anteprima...</p>
-                    </div>
+                  <div className="w-full max-w-xs h-40 flex items-center justify-center bg-slate-100 rounded-lg border border-slate-200">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-2" />
+                    <span className="text-slate-500 text-sm">
+                      Caricamento anteprima...
+                    </span>
                   </div>
                 ) : preview ? (
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: "400px",
-                      height: "200px",
-                      overflow: "hidden",
-                      borderRadius: "8px",
-                      border: "1px solid #e5e7eb",
-                    }}
-                  >
+                  <div className="w-full max-w-xs h-40 overflow-hidden rounded-lg border border-slate-200">
                     <img
                       src={preview}
                       alt="Anteprima"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                      }}
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 ) : null}
 
-                <div style={{ width: "100%" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      marginBottom: "4px",
-                    }}
-                  >
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">
                     Immagine (max 10MB)
                   </label>
                   <input
@@ -339,27 +274,14 @@ export function UploadButton({ onUploadComplete }) {
                     accept="image/*"
                     onChange={handleFileChange}
                     disabled={isUploading}
-                    style={{
-                      width: "100%",
-                      padding: "8px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                    }}
+                    className="block w-full text-sm border border-slate-300 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                   />
                 </div>
 
                 {selectedFile && !isImageLoading && (
                   <>
-                    <div style={{ width: "100%" }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          marginBottom: "4px",
-                        }}
-                      >
+                    <div className="w-full">
+                      <label className="block text-sm font-medium mb-1">
                         Nome visualizzato
                       </label>
                       <input
@@ -368,28 +290,15 @@ export function UploadButton({ onUploadComplete }) {
                         onChange={(e) => setImageName(e.target.value)}
                         placeholder="Nome dell'immagine"
                         disabled={isUploading}
-                        style={{
-                          width: "100%",
-                          padding: "8px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                        }}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
                       />
                     </div>
 
-                    <div style={{ width: "100%" }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          marginBottom: "4px",
-                        }}
-                      >
+                    <div className="w-full">
+                      <label className="block text-sm font-medium mb-1">
                         Tag
                       </label>
-                      <div style={{ display: "flex", gap: "8px" }}>
+                      <div className="flex gap-2">
                         <input
                           type="text"
                           value={tagInput}
@@ -397,71 +306,30 @@ export function UploadButton({ onUploadComplete }) {
                           onKeyDown={handleKeyDown}
                           placeholder="Aggiungi tag e premi Enter"
                           disabled={isUploading}
-                          style={{
-                            flex: 1,
-                            padding: "8px",
-                            border: "1px solid #d1d5db",
-                            borderRadius: "6px",
-                            fontSize: "14px",
-                          }}
+                          className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
                         />
                         <button
                           type="button"
                           onClick={addTag}
                           disabled={isUploading}
-                          style={{
-                            padding: "8px",
-                            backgroundColor: "#3b82f6",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                          }}
+                          className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm transition"
                         >
                           ➕
                         </button>
                       </div>
-
                       {tags.length > 0 && (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                            marginTop: "8px",
-                          }}
-                        >
+                        <div className="flex flex-wrap gap-2 mt-2">
                           {tags.map((tag) => (
                             <span
                               key={tag}
-                              style={{
-                                backgroundColor: "#e5e7eb",
-                                color: "#374151",
-                                padding: "4px 8px",
-                                borderRadius: "12px",
-                                fontSize: "12px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
+                              className="bg-slate-200 text-slate-700 px-2 py-1 rounded-full text-xs flex items-center gap-1"
                             >
                               {tag}
                               <button
                                 onClick={() => removeTag(tag)}
                                 disabled={isUploading}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "#6b7280",
-                                  padding: "0",
-                                  borderRadius: "50%",
-                                  width: "16px",
-                                  height: "16px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
+                                className="ml-1 text-slate-500 hover:text-red-500 transition"
+                                title="Rimuovi tag"
                               >
                                 ✕
                               </button>
@@ -476,50 +344,27 @@ export function UploadButton({ onUploadComplete }) {
 
               {/* Progress bar */}
               {isUploading && (
-                <div style={{ width: "100%" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    <span style={{ fontSize: "14px", color: "#6b7280" }}>
+                <div className="w-full">
+                  <div className="flex justify-between mb-1 text-xs text-slate-500">
+                    <span>
                       {uploadProgress < 100
                         ? "Upload in corso..."
                         : "Upload completato!"}
                     </span>
-                    <span style={{ fontSize: "14px", color: "#6b7280" }}>
-                      {uploadProgress}%
-                    </span>
+                    <span>{uploadProgress}%</span>
                   </div>
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "8px",
-                      backgroundColor: "#e5e7eb",
-                      borderRadius: "4px",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <div className="w-full h-2 bg-slate-200 rounded">
                     <div
-                      style={{
-                        width: `${uploadProgress}%`,
-                        height: "100%",
-                        backgroundColor:
-                          uploadProgress === 100 ? "#10b981" : "#3b82f6",
-                        transition: "width 0.3s ease",
-                      }}
+                      className={`h-2 rounded transition-all duration-300 ${
+                        uploadProgress === 100
+                          ? "bg-emerald-500"
+                          : "bg-blue-500"
+                      }`}
+                      style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
                   {uploadProgress === 100 && (
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: "#10b981",
-                        margin: "4px 0 0 0",
-                      }}
-                    >
+                    <p className="text-xs text-emerald-600 mt-1">
                       ✅ File caricato con successo!
                     </p>
                   )}
@@ -527,31 +372,14 @@ export function UploadButton({ onUploadComplete }) {
               )}
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "8px",
-                marginTop: "24px",
-                paddingTop: "16px",
-                borderTop: "1px solid #e5e7eb",
-              }}
-            >
+            <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200">
               <button
                 onClick={() => setIsOpen(false)}
                 disabled={isUploading}
-                style={{
-                  padding: "8px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "6px",
-                  backgroundColor: "white",
-                  cursor: isUploading ? "not-allowed" : "pointer",
-                  fontSize: "14px",
-                }}
+                className="px-4 py-2 border border-slate-300 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-sm transition"
               >
                 Annulla
               </button>
-
               <button
                 onClick={handleUpload}
                 disabled={
@@ -560,43 +388,19 @@ export function UploadButton({ onUploadComplete }) {
                   !imageName.trim() ||
                   isUploading
                 }
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor:
+                className={`px-4 py-2 rounded-md text-white text-sm font-medium flex items-center gap-2 transition
+                  ${
                     !selectedFile ||
                     isImageLoading ||
                     !imageName.trim() ||
                     isUploading
-                      ? "#9ca3af"
-                      : "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor:
-                    !selectedFile ||
-                    isImageLoading ||
-                    !imageName.trim() ||
-                    isUploading
-                      ? "not-allowed"
-                      : "pointer",
-                  fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
+                      ? "bg-slate-400 cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                  }`}
               >
                 {isUploading ? (
                   <>
-                    <div
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        border: "2px solid #ffffff",
-                        borderTop: "2px solid transparent",
-                        borderRadius: "50%",
-                        animation: "spin 1s linear infinite",
-                      }}
-                    />
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                     Caricamento...
                   </>
                 ) : (
@@ -608,12 +412,25 @@ export function UploadButton({ onUploadComplete }) {
         </div>
       )}
 
+      {/* Animazione spin per loader */}
       <style>{`
         @keyframes spin {
-          from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.95);}
+          to { opacity: 1; transform: scale(1);}
+        }
+
+        
       `}</style>
     </>
   );
 }
+

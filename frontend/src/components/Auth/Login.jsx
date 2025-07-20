@@ -12,12 +12,11 @@ const Login = () => {
     if (fromLogout) {
       authService.logoutLocal();
       window.history.replaceState({}, document.title, "/login");
+    } else {
+      // Login automatico appena si apre la pagina
+      authService.redirectToLogin();
     }
   }, [navigate]);
-
-  const handleLogin = () => {
-    authService.redirectToLogin();
-  };
 
   return (
     <div
@@ -38,21 +37,9 @@ const Login = () => {
         </p>
       </div>
 
-      <button
-        onClick={handleLogin}
-        style={{
-          padding: "12px 24px",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontSize: "16px",
-          fontWeight: "bold",
-        }}
-      >
-        Accedi con AWS Cognito
-      </button>
+      <div style={{ margin: "30px 0", textAlign: "center" }}>
+        <span style={{ color: "#007bff", fontWeight: "bold" }}>Accesso automatico in corso...</span>
+      </div>
 
       <div
         style={{

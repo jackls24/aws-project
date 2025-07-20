@@ -10,6 +10,7 @@ from typing import Optional
 from auth.routes import get_current_user
 from auth.cognito_auth import get_temporary_credentials
 from jose import jwt
+import datetime
 
 # Carica le variabili d'ambiente
 load_dotenv()
@@ -104,7 +105,9 @@ def generate_s3_key(user_id: Optional[str], file: UploadFile) -> str:
 def build_metadata(file: UploadFile, display_name: str, tags: Optional[str], user_id: Optional[str]) -> dict:
     metadata = {
         'originalname': file.filename,
-        'displayname': display_name
+        'displayname': display_name,
+        'upload_date': datetime.datetime.utcnow().isoformat(),
+        'download_count': '0'
     }
     if tags:
         metadata['tags'] = tags
