@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiService from "../../services/apiService";
 import authService from "../../services/authService";
-import UploadButton from "../ui/UploadButton";
 import NavigationBar from "../ui/navigation-bar";
 import MoveToAlbumModal from "../ui/move-to-album-modal";
 import ImageSkeleton from "../ui/image-skeleton";
@@ -13,6 +12,8 @@ import CreateAlbumModal from "../ui/CreateAlbumModal";
 import ErrorMessage from "../ui/ErrorMessage";
 import EmptyState from "../ui/EmptyState";
 import DragDropUpload from "../ui/DragDropUpload";
+import UploadButton from "../ui/UploadButton";
+
 
 export default function Dashboard() {
   const navigate = useNavigate();
