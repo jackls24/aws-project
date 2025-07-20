@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiService from "../../services/apiService";
 import authService from "../../services/authService";
-import UploadButton from "../ui/upload-button";
+import UploadButton from "../ui/UploadButton";
 import NavigationBar from "../ui/navigation-bar";
 import MoveToAlbumModal from "../ui/move-to-album-modal";
 import ImageSkeleton from "../ui/image-skeleton";
