@@ -1,7 +1,6 @@
 import { Search, User, LogOut, BarChart3, Settings } from "lucide-react";
-import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+// import { Badge } from "../ui/badge"; // Removed unused import
 import UploadButton from "./UploadButton";
 
 export default function NavigationBar({
