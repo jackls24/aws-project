@@ -30,16 +30,12 @@ class AuthService {
                 code,
                 redirect_uri: REDIRECT_URI
             });
+            console.log(code);
+            console.log(REDIRECT_URI)
             return response.data;
         } catch (error) {
-            if (error.response?.status === 400) {
-                const errorData = error.response.data;
-                if (errorData.detail && errorData.detail.includes('invalid_grant')) {
-                    throw new Error('Codice di autorizzazione non valido o già utilizzato. Riprova il login.');
-                }
-                throw new Error(errorData.detail || 'Errore di autenticazione');
-            }
-            throw new Error(error.response?.data?.detail || 'Errore di connessione al server');
+            console.log("error", error);
+            throw new Error(error.response);
         }
     }
 

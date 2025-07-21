@@ -18,14 +18,6 @@ const Callback = () => {
       try {
         const urlParams = new URLSearchParams(location.search);
         const code = urlParams.get("code");
-        const error = urlParams.get("error");
-        const errorDescription = urlParams.get("error_description");
-
-        if (error) {
-          throw new Error(
-            `${error}: ${errorDescription || "Errore di autenticazione"}`
-          );
-        }
 
         if (!code) {
           throw new Error("Nessun codice di autorizzazione ricevuto");
