@@ -9,6 +9,7 @@ on:
 
 jobs:
   build-frontend:
+    environment: aws
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,7 +28,7 @@ jobs:
         run: pip install awscli
 
       - name: Scarica .env.production da S3
-        run: aws s3 cp s3://${{ vars.AWS_S3_BUCKET }}/.env.production .env.production
+        run: aws s3 cp s3://${{ vars.AWS_S3_BUCKET_CONFIG }}/.env.production .env.production
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
