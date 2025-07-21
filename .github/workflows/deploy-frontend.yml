@@ -37,9 +37,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Mostra .env.production
+        run: cat .env.production
+
       - name: Build frontend
         run: |
-          CI='' npm run build
+          NODE_ENV=production CI='' npm run build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
