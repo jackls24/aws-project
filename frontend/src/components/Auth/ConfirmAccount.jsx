@@ -26,7 +26,7 @@ const ConfirmAccount = () => {
     setSuccess("");
 
     try {
-      const response = await authService.confirmAccount(
+      await authService.confirmAccount(
         username,
         confirmationCode
       );
