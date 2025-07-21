@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ChevronRight, Grid3X3, Eye } from "lucide-react"
+import { ChevronRight, Eye } from "lucide-react"
 
 export default function Album({ tag, images, onImageClick, open, onToggle, onDeleteAlbum }) {
   const [imageHover, setImageHover] = useState(null)
