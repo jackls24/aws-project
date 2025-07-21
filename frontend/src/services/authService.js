@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const COGNITO_DOMAIN = process.env.REACT_APP_USER_POOL_DOMAIN;
 const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
-const REDIRECT_URI = 'http://localhost:3000/callback';
+const REDIRECT_URI = process.env.REACT_APP_REDIRECT_URI;
 
 class AuthService {
     constructor() {
@@ -82,7 +82,7 @@ class AuthService {
             return;
         }
 
-        const logoutUri = 'http://localhost:3000/login';
+        const logoutUri = process.env.REACT_APP_LOGOUT_URI;
 
         const params = new URLSearchParams({
             client_id: CLIENT_ID,
@@ -117,4 +117,5 @@ class AuthService {
     }
 }
 
-export default new AuthService();
+const authServiceInstance = new AuthService();
+export default authServiceInstance;
