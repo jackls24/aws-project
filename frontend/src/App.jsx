@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import Dashboard from "./components/Dashboard/Dashboard";
+import StatsPage from "./components/StatsPage";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import ConfirmAccount from "./components/Auth/ConfirmAccount";
@@ -27,6 +28,12 @@ function App() {
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/stats"
+          element={
+              <StatsPage />
           }
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

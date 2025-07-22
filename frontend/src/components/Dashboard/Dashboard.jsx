@@ -19,7 +19,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const username = localStorage.getItem("username") || "anonymous";
 
-  // Core state
   const [images, setImages] = useState([]);
   const [album, setAlbum] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,19 +67,55 @@ export default function Dashboard() {
     );
   }, [images, searchTerm]);
 
-  const albumByTag = useMemo(() => {
-    const albumMap = {};
-    images.forEach((img) => {
-      if (img.tags && img.tags.length > 0) {
-        img.tags.forEach((tag) => {
-          if (!albumMap[tag]) albumMap[tag] = [];
-          albumMap[tag].push(img);
-        });
-      }
-    });
-    return albumMap;
-  }, [images]);
 
+const albumByTag = useMemo(() => {
+  if (!Array.isArray(images) || images.length === 0) return {};
+
+  // --- mappa preliminare tag -> immagini (tutte, senza filtro) ---
+  const tagToImages = new Map(); // tag -> Image[]
+  for (const img of images) {
+    const tags = Array.isArray(img.tags) ? img.tags : [];
+    for (const tag of tags) {
+      if (!tagToImages.has(tag)) tagToImages.set(tag, []);
+      tagToImages.get(tag).push(img);
+    }
+  }
+
+  // --- consideriamo solo i tag che hanno almeno 2 immagini totali ---
+  const eligible = [];
+  for (const [tag, imgs] of tagToImages.entries()) {
+    if (imgs.length >= 2) eligible.push([tag, imgs]);
+  }
+
+  // Se nessun tag ha >=2 immagini, ritorna oggetto vuoto
+  if (eligible.length === 0) return {};
+
+  // --- ordine: tag con MENO immagini prima (più specifici) ---
+  eligible.sort((a, b) => a[1].length - b[1].length);
+
+  // --- assegnazione unica ---
+  const assigned = new Set(); // usa un id stabile (filename se c'è, altrimenti name)
+  const result = {};
+
+  const getImgId = (img) => img.filename ?? img.name;
+
+  for (const [tag, imgs] of eligible) {
+    const albumImgs = [];
+    for (const img of imgs) {
+      const id = getImgId(img);
+      if (!assigned.has(id)) {
+        albumImgs.push(img);
+        assigned.add(id);
+      }
+    }
+    // mantieni album solo se dopo l'assegnazione restano >=2 immagini libere
+    if (albumImgs.length >= 2) {
+      result[tag] = albumImgs;
+    }
+  }
+
+  return result;
+}, [images]);
   const handleSignOut = async () => {
     try {
       const confirmLogout = window.confirm("Sei sicuro di voler effettuare il logout?");

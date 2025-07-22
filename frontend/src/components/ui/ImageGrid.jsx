@@ -75,9 +75,7 @@ export default function ImageGrid({ images, onImageClick, onDownload, onDelete, 
             </div>
 
             <div className="p-4">
-              <h3 className="font-semibold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors duration-200 truncate">
-                {image.title || image.name || "Untitled"}
-              </h3>
+  
               <div className="flex items-center text-sm text-slate-500 mb-3">
                 <User className="h-3 w-3 mr-1" />
                 <span className="truncate">{image.owner || "Unknown"}</span>

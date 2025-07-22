@@ -12,6 +12,8 @@ export default function NavigationBar({
   handleSignOut,
   loadUserImages,
 }) {
+  const { useNavigate } = require("react-router-dom");
+  const navigate = useNavigate();
   return (
     <nav className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm backdrop-blur-sm bg-white/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,7 +58,10 @@ export default function NavigationBar({
                     </div>
                   </button>
                   <div className="border-t border-gray-100 my-1"></div>
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150">
+                  <button
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => navigate("/stats")}
+                  >
                     <BarChart3 className="w-4 h-4 mr-3 text-gray-400" />
                     View Statistics
                   </button>
