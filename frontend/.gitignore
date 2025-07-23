@@ -33,7 +33,7 @@ pids
 
 # Optional eslint cache
 .eslintcache
-
+.env.production
 # Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/

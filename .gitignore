@@ -45,6 +45,18 @@ yarn-error.log*
 # Docker
 .dockerignore
 
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*.tfplan
+# Se usi variabili sensibili, ignora anche i tfvars locali:
+terraform.tfvars
+*.tfvars
+
 # IDE
 .vscode/
 .idea/
