@@ -1,6 +1,14 @@
 # CloudyGallery: Gestione di Immagini su AWS
 
-CloudyGallery è una piattaforma cloud-native per la gestione, l'analisi e la ricerca di immagini, progettata per offrire un'esperienza moderna e sicura sfruttando i principali servizi AWS. Il progetto integra frontend React, backend FastAPI, Lambda, S3, DynamoDB, Rekognition, Cognito, ECS e Terraform.
+CloudyGallery è una piattaforma cloud per la gestione intelligente di immagini. Il sistema
+consente di caricare, organizzare, ricercare e analizzare immagini tramite una dashboard
+web, integrando funzionalità come il riconoscimento automatico dei tag tramite Ama-
+zon Rekognition, la gestione di album personalizzati e la visualizzazione di statistiche
+interattive.
+L’architettura si basa su un frontend React ospitato su S3, un backend FastAPI con-
+tainerizzato e deployato su ECS, e una funzione Lambda per l’analisi automatica delle
+immagini. L’infrastruttura è completamente automatizzata tramite Terraform e il ciclo
+di vita applicativo `e gestito da pipeline CI/CD su GitHub Actions.
 
 ## Caratteristiche principali
 - **Upload immagini multiplo** tramite drag&drop, con tag personalizzati e anteprima.
@@ -71,10 +79,6 @@ CloudyGallery è una piattaforma cloud-native per la gestione, l'analisi e la ri
 - `POST /albums`: Crea album
 - `DELETE /albums/{album_name}/{user_id}`: Elimina album
 - `POST /exchange-code`: Scambio codice OAuth2 per token Cognito
-
-## Sicurezza
-- Tutte le API richiedono autenticazione tramite ID token Cognito (Bearer).
-- Le operazioni su S3 e DynamoDB sono firmate con credenziali temporanee Cognito.
 
 ## Autori
 - Messina Giacomo Giovanni
