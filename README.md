@@ -31,6 +31,10 @@ di vita applicativo `e gestito da pipeline CI/CD su GitHub Actions.
 - **Rekognition**: Analisi immagini e generazione tag.
 - **Cognito**: Autenticazione e gestione utenti.
 - **Terraform**: Provisioning e gestione infrastruttura.
+Di seguito lo schema architetturale del sistema:
+
+![Architettura CloudyGallery](assets/Diagramma.drawio.png)
+*Figura 1: Architettura generale del sistema su AWS.*
 
 ## Come avviare il progetto
 
@@ -79,6 +83,16 @@ di vita applicativo `e gestito da pipeline CI/CD su GitHub Actions.
 - `POST /albums`: Crea album
 - `DELETE /albums/{album_name}/{user_id}`: Elimina album
 - `POST /exchange-code`: Scambio codice OAuth2 per token Cognito
+
+
+## Screenshot
+
+![Dashboard Applicazione](assets/Dashboard.png)
+*Figura 2: Esempio di dashboard utente.*
+
+![Statistiche Tag](assets/Stats.png)
+*Figura 3: Visualizzazione delle statistiche sui tag delle immagini.*
+
 
 ## Autori
 - Messina Giacomo Giovanni
