@@ -1,4 +1,3 @@
-# Terraform conversion of CloudFormation template (excluding log resources)
 
 terraform {
   required_providers {
@@ -11,7 +10,16 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2"
+  profile = "giacomo1000"
+
+}
+
+#######################
+# Roles
+#######################
+resource "aws_iam_service_linked_role" "ecs" {
+  aws_service_name = "ecs.amazonaws.com"
 }
 
 #######################
@@ -29,7 +37,7 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "subnet_im" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "172.31.48.0/20"
-  availability_zone_id    = "use1-az3"
+  availability_zone_id    = "use2-az1"
   map_public_ip_on_launch = true
 }
 
@@ -37,17 +45,158 @@ resource "aws_subnet" "subnet_im" {
 # S3 Buckets
 #######################
 resource "aws_s3_bucket" "backend_s3_config" {
-  bucket = "backend-s3-config"
+  bucket = "backend-s3-config-giacomo1000"
 
   tags = {
-    Name = "backend-s3-config"
-  }
-
-  lifecycle {
-    prevent_destroy = false
+    Name = "backend-s3-config-2"
   }
 
   force_destroy = true
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+      bucket_key_enabled = true
+    }
+  }
+
+  # Blocchi rimossi per compatibilità provider
+}
+
+resource "aws_s3_bucket_policy" "backend_s3_config_policy" {
+  bucket = aws_s3_bucket.backend_s3_config.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement: [
+      {
+        Sid: "PublicReadGetObject",
+        Effect: "Allow",
+        Principal: {
+          AWS: "arn:aws:iam::839351546441:role/ecsTaskExecutionRole"
+        },
+        Action: "s3:GetObject",
+        Resource: "arn:aws:s3:::backend-s3-config-giacomo1000/*"
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "frontend_gallery" {
+  bucket = "frontend-gallery-bucket-giacomo1000"
+
+  website {
+    index_document = "index.html"
+    error_document = "index.html"
+  }
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+    allowed_origins = [
+      "http://frontend-gallery-bucket.s3-website-us-east-1.amazonaws.com",
+      "https://frontend-gallery-bucket.s3-website-us-east-1.amazonaws.com"
+    ]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }
+
+  force_destroy = true
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+      bucket_key_enabled = true
+    }
+  }
+
+
+}
+
+resource "aws_s3_bucket_policy" "frontend_gallery_policy" {
+  bucket = aws_s3_bucket.frontend_gallery.id
+
+  policy = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Sid: "PublicReadGetObject",
+        Effect: "Allow",
+        Principal: "*",
+        Action: "s3:GetObject",
+        Resource: "arn:aws:s3:::frontend-gallery-bucket-giacomo1000/*"
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "imagegallery" {
+  bucket = "imagegallery-giacomo1000"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE"]
+    allowed_origins = [
+      "http://localhost:3000",
+      "https://localhost:3000",
+      "https://localhost:8000"
+    ]
+    expose_headers = ["ETag"]
+    max_age_seconds = 3000
+  }
+
+  force_destroy = true
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+
+}
+
+resource "aws_s3_bucket_notification" "imagegallery_lambda_trigger" {
+  bucket = aws_s3_bucket.imagegallery.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.image_analysis.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "users/"
+  }
+
+  depends_on = [aws_lambda_permission.image_analysis_invocation]
+}
+
+resource "aws_s3_bucket_policy" "imagegallery_policy" {
+  bucket = aws_s3_bucket.imagegallery.id
+
+  policy = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Sid: "PublicReadGetObject",
+        Effect: "Allow",
+        Principal: "*",
+        Action: "*",
+        Resource: "arn:aws:s3:::imagegallery-giacomo1000/*"
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_permission" "image_analysis_invocation" {
+  statement_id  = "AllowExecutionFromS3"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.image_analysis.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.imagegallery.arn
 }
 
 #######################
@@ -253,3 +402,131 @@ resource "aws_ecs_task_definition" "backend" {
     }
   ])
 }
+
+
+resource "aws_ecs_cluster" "my_cluster" {
+  name = "my-ec2-cluster-4" 
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+}
+
+ resource "aws_ecs_cluster_capacity_providers" "example" {
+  cluster_name = aws_ecs_cluster.my_cluster.name
+
+  capacity_providers = [aws_ecs_capacity_provider.asg_provider.name]
+
+  default_capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.asg_provider.name
+    weight            = 1
+    base              = 0
+  }
+}
+
+
+
+# Instance profile per ECS
+resource "aws_iam_instance_profile" "ecs_instance_profile" {
+  name = "ecsInstanceRole"
+  role = aws_iam_role.ecs_instance_role.name
+}
+
+# Ruolo IAM per ECS instances (se non già presente)
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "ecsInstanceRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  ]
+}
+
+resource "aws_launch_template" "ecs_launch_template" {
+  name_prefix   = "ecs-launch-template-"
+  image_id      = "ami-0ee4f2271a4df2d7d" # Amazon ECS-optimized AMI for us-east-2
+  instance_type = "t3.micro"
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ecs_instance_profile.name
+  }
+
+  user_data = base64encode(<<-EOF
+              #!/bin/bash
+              echo ECS_CLUSTER=my-ec2-cluster-4 >> /etc/ecs/ecs.config
+              EOF
+            )
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "ecs-instance"
+    }
+  }
+}
+
+resource "aws_autoscaling_group" "ecs_asg" {
+  name                      = "ecs-asg-my-ec2-cluster-4"
+  max_size                  = 5
+  min_size                  = 2
+  desired_capacity          = 3
+  vpc_zone_identifier       = [aws_subnet.subnet_im.id]
+  health_check_type         = "EC2"
+  launch_template {
+    id      = aws_launch_template.ecs_launch_template.id
+    version = "$Latest"
+  }
+  protect_from_scale_in = true
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = "true"
+    propagate_at_launch = true
+  }
+}
+
+resource "aws_ecs_capacity_provider" "asg_provider" {
+  name = "asg-provider"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = aws_autoscaling_group.ecs_asg.arn
+    managed_termination_protection = "ENABLED"
+
+    managed_scaling {
+      status                    = "ENABLED"
+      target_capacity           = 100
+      minimum_scaling_step_size = 1
+      maximum_scaling_step_size = 1000
+    }
+  }
+}
+
+resource "aws_ecs_service" "backend_service" {
+  name            = "aws-backend-service"
+  cluster         = aws_ecs_cluster.my_cluster.id
+  task_definition = aws_ecs_task_definition.backend.arn
+  desired_count   = 3
+
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.asg_provider.name
+    weight            = 1
+  }
+
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+
+  lifecycle {
+    ignore_changes = [task_definition] # utile se aggiorni la task fuori da Terraform
+  }
+}
+
